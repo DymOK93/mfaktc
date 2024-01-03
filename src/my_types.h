@@ -105,7 +105,7 @@ typedef struct
 #endif  
 
   int gpu_sieving;			/* TRUE if we're letting the GPU do the sieving */
-  int gpu_sieve_size;			/* Size (in bits) of the GPU sieve.  Default is 128M bits. */
+  unsigned long long gpu_sieve_size;			/* Size (in bits) of the GPU sieve.  Default is 128M bits. */
   int gpu_sieve_primes;                 /* the actual number of primes using for sieving */
   int gpu_sieve_processing_size;	/* The number of GPU sieve bits each thread in a Barrett kernel will process.  Default is 2K bits. */
   unsigned int gpu_sieve_min_exp; 	/* the minumum exponent allowed for GPU sieving */

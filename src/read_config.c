@@ -290,7 +290,7 @@ int read_config(mystuff_t *mystuff)
       }
     }
     if(mystuff->verbosity >= 1)printf("  GPUSieveSize              %dMi bits\n",i);
-    mystuff->gpu_sieve_size = i * 1024 * 1024;
+    mystuff->gpu_sieve_size = (unsigned long long)i * 1024 * 1024;
 
 /*****************************************************************************/
 
@@ -304,7 +304,7 @@ int read_config(mystuff_t *mystuff)
       if(i % 8 != 0)
       {
         printf("WARNING: GPUSieveProcessSize must be a multiple of 8\n");
-        i &= 0xFFFFFFF0;
+        i &= (int)0xFFFFFFF0;
         if(i == 0)i = 8;
         printf("         --> changed GPUSieveProcessSize to %d\n", i);
       }
@@ -318,7 +318,7 @@ int read_config(mystuff_t *mystuff)
         printf("WARNING: Read GPUSieveProcessSize=%d from mfaktc.ini, using min value (%d)\n",i,GPU_SIEVE_PROCESS_SIZE_MIN);
 	i = GPU_SIEVE_PROCESS_SIZE_MIN;
       }
-      if(mystuff->gpu_sieve_size % (i * 1024) != 0)
+      if(mystuff->gpu_sieve_size % ((unsigned long long)i * 1024) != 0)
       {
         printf("WARNING: GPUSieveSize must be a multiple of GPUSieveProcessSize, using default value (%d)!\n", GPU_SIEVE_PROCESS_SIZE_DEFAULT);
         i = GPU_SIEVE_PROCESS_SIZE_DEFAULT;

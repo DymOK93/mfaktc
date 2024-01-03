@@ -171,11 +171,11 @@ The following lines define the min, default and max value.
 
 #define GPU_SIEVE_PRIMES_MIN                 0 /* GPU sieving code can work (inefficiently) with very small numbers */
 #define GPU_SIEVE_PRIMES_DEFAULT         82486 /* Default is to sieve primes up to about 1.05M */
-#define GPU_SIEVE_PRIMES_MAX           1075000 /* Primes to 16,729,793.  GPU sieve should be able to handle up to 16M. */
+#define GPU_SIEVE_PRIMES_MAX          16000000 /* Primes to 16,729,793.  GPU sieve should be able to handle up to 16M. */
 
 #define GPU_SIEVE_SIZE_MIN                   4 /* A 4M bit sieve seems like a reasonable minimum */
 #define GPU_SIEVE_SIZE_DEFAULT              64 /* Default is a 16M bit sieve */
-#define GPU_SIEVE_SIZE_MAX                2047 /* 2047M (INT_MAX) is current sieve algorithm limit */
+#define GPU_SIEVE_SIZE_MAX               65535 /* 2047M (INT_MAX) is current sieve algorithm limit */
 
 #define GPU_SIEVE_PROCESS_SIZE_MIN           8 /* Processing 8K bits in each block is minimum (256 threads * 1 word of 32 bits) */
 #define GPU_SIEVE_PROCESS_SIZE_DEFAULT      16 /* Default is processing 8K bits */
