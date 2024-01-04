@@ -175,7 +175,7 @@ The following lines define the min, default and max value.
 
 #define GPU_SIEVE_SIZE_MIN                   4 /* A 4M bit sieve seems like a reasonable minimum */
 #define GPU_SIEVE_SIZE_DEFAULT              64 /* Default is a 16M bit sieve */
-#define GPU_SIEVE_SIZE_MAX               65535 /* 2047M (INT_MAX) is current sieve algorithm limit */
+#define GPU_SIEVE_SIZE_MAX              131072 /* 2047M (INT_MAX) is current sieve algorithm limit */
 
 #define GPU_SIEVE_PROCESS_SIZE_MIN           8 /* Processing 8K bits in each block is minimum (256 threads * 1 word of 32 bits) */
 #define GPU_SIEVE_PROCESS_SIZE_DEFAULT      16 /* Default is processing 8K bits */

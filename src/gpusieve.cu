@@ -124,52 +124,62 @@ inline void __checkCudaErrors(cudaError err, const char *file, const int line )
 
 #define gen_pinv(p)	(0xFFFFFFFF / (p) + 1)
 
-__device__ __inline static int mod_p_int(long long x, long long p, long long pinv)
-{
-	long long q;
-	int a, b, p32;
-	asm("mul.lo.s64 %0, %4, %6;\n\t"	//	q = x * pinv
-		"shr.s64 %0, %0, 32;\n\t"       //  shift carry
-		"mul.lo.s64 %0, %0, %5;\n\t"	//	q = q * p;
-		"sub.s64 %0, %4, %0;\n\t"		//	q = x - q;
-		"cvt.s32.s64 %1, %0;\n\t"		//	a = (int)q;
-		"cvt.s32.s64 %3, %5;\n\t"		//	p32 = int(p);
-		"sub.s32 %2, %1, %3;\n\t"		//	b = a - p32;
-		"slct.s32.s32 %2, %2, %1, %2;"	//	b = (b >= 0) ? b : a
-		: "=l" (q), "=r"(a), "=r"(b), "=r"(p32) : "l"(x), "l" (p), "l" (pinv));
-	return b;
-}
-
-__device__ __inline static int mod_p (long long x, int p, int pinv)
-{
+//__device__ __inline static int mod_p_int(long long x, long long p, long long pinv)
+//{
+//	long long q;
+//	int a, b, p32;
+//	asm("mul.lo.s64 %0, %4, %6;\n\t"	//	q = x * pinv
+//		"shr.s64 %0, %0, 32;\n\t"       //  shift carry
+//		"mul.lo.s64 %0, %0, %5;\n\t"	//	q = q * p;
+//		"sub.s64 %0, %4, %0;\n\t"		//	q = x - q;
+//		"cvt.s32.s64 %1, %0;\n\t"		//	a = (int)q;
+//		"cvt.s32.s64 %3, %5;\n\t"		//	p32 = int(p);
+//		"sub.s32 %2, %1, %3;\n\t"		//	b = a - p32;
+//		"slct.s32.s32 %2, %2, %1, %2;"	//	b = (b >= 0) ? b : a
+//		: "=l" (q), "=r"(a), "=r"(b), "=r"(p32) : "l"(x), "l" (p), "l" (pinv));
+//	return b;
+//}
+//
+//__device__ __inline static int mod_p(long long x, int p, int pinv)
+//{
 // CUDA compiler generated crappy PTX code for the statements above.  I replaced them with my own PTX code.
 // Even the code below generates a needless copying of x.
 
-	//int	r;
-	//asm ("mul.hi.s32 %0, %1, %2;\n\t"		//	r = __mulhi (x, pinv);
-	//     "mul.lo.s32 %0, %0, %3;\n\t"		//	r = r * p;
-	//     "sub.s32 	%1, %1, %0;\n\t"		//	x = x - r;
-	//     "sub.s32 	%0, %1, %3;\n\t"		//	r = x - p;
-	//     "slct.s32.s32 %0, %0, %1, %0;"		//	r = (r >= 0) ? r : x
-	//     : "=r" (r), "+r" (x) : "r" (pinv), "r" (p));
+//	int	r;
+//	asm ("mul.hi.s32 %0, %1, %2;\n\t"		//	r = __mulhi (x, pinv);
+//	     "mul.lo.s32 %0, %0, %3;\n\t"		//	r = r * p;
+//	     "sub.s32 	%1, %1, %0;\n\t"		//	x = x - r;
+//	     "sub.s32 	%0, %1, %3;\n\t"		//	r = x - p;
+//	     "slct.s32.s32 %0, %0, %1, %0;"		//	r = (r >= 0) ? r : x
+//	     : "=r" (r), "+r" (x) : "r" (pinv), "r" (p));
+//
+//#ifdef GWDEBUG
+//	if (pinv != gen_pinv (p))
+//		printf ("p doesn't match pinv!! p = %d, pinv = %d\n", p, pinv);
+//	if (r < 0 || r >= p)
+//		printf ("x mod p out of range!! x = %d, p = %d, pinv = %d, r = %d\n", x, p, pinv, r);
+//#endif
+//
+//	return r;
+//	return mod_p_int(x, p, pinv);
+//}
 
-#ifdef GWDEBUG
-	if (pinv != gen_pinv (p))
-		printf ("p doesn't match pinv!! p = %d, pinv = %d\n", p, pinv);
-	if (r < 0 || r >= p)
-		printf ("x mod p out of range!! x = %d, p = %d, pinv = %d, r = %d\n", x, p, pinv, r);
-#endif
-
-	// return r;
-	return mod_p_int(x, p, pinv);
-}
+//__device__ __inline static uint32 mod_p(uint32 bclr, uint64 start, uint32 p, uint32 pinv)
+//{
+//	const long long x = (long long)(bclr - start);
+//	const long long q = x * pinv >> 32;
+//	const uint32 a = (uint32)(x - q * p);
+//	return a >= p ? a - p : a;
+//}
 
 // Inline to calculate x mod p where p is a constant
 
-__device__ __inline static int mod_const_p (long long x, int p)
-{
-	return mod_p (x, p, gen_pinv (p));
-}
+//__device__ __inline static int mod_const_pf(long long x, int p)
+//{
+//	return mod_pf(x, p, gen_pinv (p));
+//}
+
+//#define mod_const_p(bclr, start, p) mod_p((bclr), (start), (p), gen_pinv (p))
 
 // Inline to calculate x mod p using an inverse of floor ((2^32 / p) - 0.5).
 // We're allowed to return a sloppy modulo result ranging from -p/2 to p-1.
@@ -178,40 +188,56 @@ __device__ __inline static int mod_const_p (long long x, int p)
 
 #define gen_sloppy_pinv(p)	((uint32) floor (4294967296.0 / (p) - 0.5))
 
-__device__ __inline static int sloppy_mod_p_int(long long x, long long p, long long pinv)
+//__device__ __inline static int sloppy_mod_p_int(long long x, long long p, long long pinv)
+//{
+//	//int q, a;
+//	//q = (int)(x * pinv >> 32);                // quotient = x * inverse_of_p
+//	//a = (int)(x - q * p);	                      // x mod p (but may be too large by one p)
+//	//return a;
+//	long long q;
+//	int r;
+//	asm("mul.lo.s64 %0, %2, %4;\n\t"	//	q = x * pinv
+//		"shr.s64 %0, %0, 32;\n\t"       //  shift carry
+//		"mul.lo.s64 %0, %0, %3;\n\t"	//	q = q * p;
+//		"sub.s64 %0, %2, %0;\n\t"		//	q = x - q;
+//		"cvt.s32.s64 %1, %0;\n\t"		//	r = (int)q;
+//		: "=l" (q), "=r"(r) : "l"(x), "l" (p), "l" (pinv));
+//	return r;
+//}
+//
+//__device__ __inline static int sloppy_mod_pf(long long x, int p, int pinv)
+//{
+////	int	q, r;
+////
+////	q = __mulhi (x, pinv);		// quotient = x * inverse_of_p
+////	r = (x - q * p);		// x mod p (but may be too small or large by one-half p)
+////
+////#ifdef GWDEBUG
+////	if ((uint32) pinv != gen_sloppy_pinv (p))
+////		printf ("p doesn't match pinv!! p = %d, pinv = %d\n", p, pinv);
+////	if (r < -p / 2 || r >= p)
+////		printf ("x sloppy mod p out of range!! x = %d, p = %d, pinv = %d, r = %d\n", x, p, pinv, r);
+////#endif
+////	return r;
+//	return sloppy_mod_p_int(x, p, pinv);
+//}
+
+__device__ __inline static uint32 sloppy_mod_p(uint32 bclr, uint64 start, uint32 p, uint32 pinv)
 {
-	//int q, a;
-	//q = (int)(x * pinv >> 32);                // quotient = x * inverse_of_p
-	//a = (int)(x - q * p);	                      // x mod p (but may be too large by one p)
-	//return a;
-	long long q;
-	int r;
-	asm("mul.lo.s64 %0, %2, %4;\n\t"	//	q = x * pinv
-		"shr.s64 %0, %0, 32;\n\t"       //  shift carry
-		"mul.lo.s64 %0, %0, %3;\n\t"	//	q = q * p;
-		"sub.s64 %0, %2, %0;\n\t"		//	q = x - q;
-		"cvt.s32.s64 %1, %0;\n\t"		//	r = (int)q;
-		: "=l" (q), "=r"(r) : "l"(x), "l" (p), "l" (pinv));
-	return r;
+	const long long x = (long long)(bclr - start);
+	const long long q = x * pinv >> 32;
+	return (uint32)(x - q * p);
 }
 
-__device__ __inline static int sloppy_mod_p (long long x, int p, int pinv)
+__device__ __inline static uint32 mod_p(uint32 bclr, uint64 start, uint32 p, uint32 pinv)
 {
-	//int	q, r;
-
-	//q = __mulhi (x, pinv);		// quotient = x * inverse_of_p
-	//r = (x - q * p);		// x mod p (but may be too small or large by one-half p)
-
-#ifdef GWDEBUG
-	if ((uint32) pinv != gen_sloppy_pinv (p))
-		printf ("p doesn't match pinv!! p = %d, pinv = %d\n", p, pinv);
-	if (r < -p / 2 || r >= p)
-		printf ("x sloppy mod p out of range!! x = %d, p = %d, pinv = %d, r = %d\n", x, p, pinv, r);
-#endif
-
-	/*return r;*/
-	return sloppy_mod_p_int(x, p, pinv);
+	const uint32 a = sloppy_mod_p(bclr, start, p, pinv);
+	return a <= p ? a : a - p;
 }
+
+// Inline to calculate x mod p where p is a constant
+
+#define mod_const_p(bclr, start, p) mod_p((bclr), (start), (p), gen_pinv (p))
 
 // Inline to add a negative constant mod p.  That is given i between 0 and p-1, return ((i + inc) % p)
 
@@ -307,21 +333,21 @@ __global__ static void __launch_bounds__(256,6) SegSieve (uint8 *big_bit_array_d
 	uint32 mask, mask2, mask3, mask4, i11, i13, i17, i19, i23, i29, i31, i37, i41, i43, i47, i53, i59, i61;
 
 	if (primesNotSieved == 4) {	// Primes 2, 3, 5, 7 are not sieved
-		i11 = mod_const_p ((long long)bit_to_clr[4] - thread_start, 11);	// compute bit to clear for prime 11
-		i13 = mod_const_p ((long long)bit_to_clr[5] - thread_start, 13);	// compute bit to clear for prime 13
-		i17 = mod_const_p ((long long)bit_to_clr[6] - thread_start, 17);	// compute bit to clear for prime 17
+		i11 = mod_const_p (bit_to_clr[4], thread_start, 11);	// compute bit to clear for prime 11
+		i13 = mod_const_p (bit_to_clr[5], thread_start, 13);	// compute bit to clear for prime 13
+		i17 = mod_const_p (bit_to_clr[6], thread_start, 17);	// compute bit to clear for prime 17
 	}
 	if (primesNotSieved == 5) {	// Primes 2, 3, 5, 7, 11 are not sieved
-		i13 = mod_const_p ((long long)bit_to_clr[5] - thread_start, 13);	// compute bit to clear for prime 13
-		i17 = mod_const_p ((long long)bit_to_clr[6] - thread_start, 17);	// compute bit to clear for prime 17
+		i13 = mod_const_p (bit_to_clr[5], thread_start, 13);	// compute bit to clear for prime 13
+		i17 = mod_const_p (bit_to_clr[6], thread_start, 17);	// compute bit to clear for prime 17
 	}
 	if (primesNotSieved == 6) {	// Primes 2, 3, 5, 7, 11, 13 are not sieved
-		i17 = mod_const_p ((long long)bit_to_clr[6] - thread_start, 17);	// compute bit to clear for prime 17
+		i17 = mod_const_p (bit_to_clr[6], thread_start, 17);	// compute bit to clear for prime 17
 	}
-	i19 = mod_const_p ((long long)bit_to_clr[7] - thread_start, 19);	// compute bit to clear for prime 19
-	i23 = mod_const_p ((long long)bit_to_clr[8] - thread_start, 23);	// compute bit to clear for prime 23
-	i29 = mod_const_p ((long long)bit_to_clr[9] - thread_start, 29);	// compute bit to clear for prime 29
-	i31 = mod_const_p ((long long)bit_to_clr[10] - thread_start, 31);	// compute bit to clear for prime 31
+	i19 = mod_const_p (bit_to_clr[7], thread_start, 19);	// compute bit to clear for prime 19
+	i23 = mod_const_p (bit_to_clr[8], thread_start, 23);	// compute bit to clear for prime 23
+	i29 = mod_const_p (bit_to_clr[9], thread_start, 29);	// compute bit to clear for prime 29
+	i31 = mod_const_p (bit_to_clr[10], thread_start, 31);	// compute bit to clear for prime 31
 
 	if (primesNotSieved == 4) {	// Primes 2, 3, 5, 7 are not sieved
 		mask = (BITSLL11 << i11) | (BITSLL13 << i13) | (BITSLL17 << i17);
@@ -550,13 +576,13 @@ __global__ static void __launch_bounds__(256,6) SegSieve (uint8 *big_bit_array_d
 
 	// The following handles primes, 32 < p < 64.  Each prime hits 0 or 1 32-bit words.
 
-	i37 = mod_const_p ((long long)bit_to_clr[11] - thread_start, 37);	// compute bit to clear for prime 37
-	i41 = mod_const_p ((long long)bit_to_clr[12] - thread_start, 41);	// compute bit to clear for prime 41
-	i43 = mod_const_p ((long long)bit_to_clr[13] - thread_start, 43);	// compute bit to clear for prime 43
-	i47 = mod_const_p ((long long)bit_to_clr[14] - thread_start, 47);	// compute bit to clear for prime 47
-	i53 = mod_const_p ((long long)bit_to_clr[15] - thread_start, 53);	// compute bit to clear for prime 53
-	i59 = mod_const_p ((long long)bit_to_clr[16] - thread_start, 59);	// compute bit to clear for prime 59
-	i61 = mod_const_p ((long long)bit_to_clr[17] - thread_start, 61);	// compute bit to clear for prime 61
+	i37 = mod_const_p (bit_to_clr[11], thread_start, 37);	// compute bit to clear for prime 37
+	i41 = mod_const_p (bit_to_clr[12], thread_start, 41);	// compute bit to clear for prime 41
+	i43 = mod_const_p (bit_to_clr[13], thread_start, 43);	// compute bit to clear for prime 43
+	i47 = mod_const_p (bit_to_clr[14], thread_start, 47);	// compute bit to clear for prime 47
+	i53 = mod_const_p (bit_to_clr[15], thread_start, 53);	// compute bit to clear for prime 53
+	i59 = mod_const_p (bit_to_clr[16], thread_start, 59);	// compute bit to clear for prime 59
+	i61 = mod_const_p (bit_to_clr[17], thread_start, 61);	// compute bit to clear for prime 61
 
 	for (j = 0; ; ) {
 		mask = 1 << i37;
@@ -587,13 +613,13 @@ __global__ static void __launch_bounds__(256,6) SegSieve (uint8 *big_bit_array_d
 	uint32 i67, i71, i73, i79, i83, i89, i97, i101, i103, i107, i109, i113, i127;
 	uint64	mask;
 
-	i67 = mod_const_p ((long long)bit_to_clr[18] - thread_start, 67);	// compute bit to clear for prime 67
-	i71 = mod_const_p ((long long)bit_to_clr[19] - thread_start, 71);	// compute bit to clear for prime 71
-	i73 = mod_const_p ((long long)bit_to_clr[20] - thread_start, 73);	// compute bit to clear for prime 73
-	i79 = mod_const_p ((long long)bit_to_clr[21] - thread_start, 79);	// compute bit to clear for prime 79
-	i83 = mod_const_p ((long long)bit_to_clr[22] - thread_start, 83);	// compute bit to clear for prime 83
-	i89 = mod_const_p ((long long)bit_to_clr[23] - thread_start, 89);	// compute bit to clear for prime 89
-	i97 = mod_const_p ((long long)bit_to_clr[24] - thread_start, 97);	// compute bit to clear for prime 97
+	i67 = mod_const_p (bit_to_clr[18], thread_start, 67);	// compute bit to clear for prime 67
+	i71 = mod_const_p (bit_to_clr[19], thread_start, 71);	// compute bit to clear for prime 71
+	i73 = mod_const_p (bit_to_clr[20], thread_start, 73);	// compute bit to clear for prime 73
+	i79 = mod_const_p (bit_to_clr[21], thread_start, 79);	// compute bit to clear for prime 79
+	i83 = mod_const_p (bit_to_clr[22], thread_start, 83);	// compute bit to clear for prime 83
+	i89 = mod_const_p (bit_to_clr[23], thread_start, 89);	// compute bit to clear for prime 89
+	i97 = mod_const_p (bit_to_clr[24], thread_start, 97);	// compute bit to clear for prime 97
 
 	for (j = 0; ; ) {
 		mask = (uint64) 1 << i67;
@@ -615,12 +641,12 @@ __global__ static void __launch_bounds__(256,6) SegSieve (uint8 *big_bit_array_d
 		i97 = bump_mod_p (i97, -64, 97);
 	}
 
-	i101 = mod_const_p ((long long)bit_to_clr[25] - thread_start, 101);	// compute bit to clear for prime 101
-	i103 = mod_const_p ((long long)bit_to_clr[26] - thread_start, 103);	// compute bit to clear for prime 103
-	i107 = mod_const_p ((long long)bit_to_clr[27] - thread_start, 107);	// compute bit to clear for prime 107
-	i109 = mod_const_p ((long long)bit_to_clr[28] - thread_start, 109);	// compute bit to clear for prime 109
-	i113 = mod_const_p ((long long)bit_to_clr[29] - thread_start, 113);	// compute bit to clear for prime 113
-	i127 = mod_const_p ((long long)bit_to_clr[30] - thread_start, 127);	// compute bit to clear for prime 127
+	i101 = mod_const_p (bit_to_clr[25], thread_start, 101);	// compute bit to clear for prime 101
+	i103 = mod_const_p (bit_to_clr[26], thread_start, 103);	// compute bit to clear for prime 103
+	i107 = mod_const_p (bit_to_clr[27], thread_start, 107);	// compute bit to clear for prime 107
+	i109 = mod_const_p (bit_to_clr[28], thread_start, 109);	// compute bit to clear for prime 109
+	i113 = mod_const_p (bit_to_clr[29], thread_start, 113);	// compute bit to clear for prime 113
+	i127 = mod_const_p (bit_to_clr[30], thread_start, 127);	// compute bit to clear for prime 127
 
 	for (j = 0; ; ) {
 		mask = (uint64) 1 << i101;
@@ -651,12 +677,12 @@ __global__ static void __launch_bounds__(256,6) SegSieve (uint8 *big_bit_array_d
 	uint32 	i193, i197, i199, i211, i223, i227, i229, i233, i239, i241, i251;
 	uint64	mask1, mask2;
 
-	i131 = mod_const_p ((long long)bit_to_clr[31] - thread_start, 131);	// compute bit to clear for prime 131
-	i137 = mod_const_p ((long long)bit_to_clr[32] - thread_start, 137);	// compute bit to clear for prime 137
-	i139 = mod_const_p ((long long)bit_to_clr[33] - thread_start, 139);	// compute bit to clear for prime 139
-	i149 = mod_const_p ((long long)bit_to_clr[34] - thread_start, 149);	// compute bit to clear for prime 149
-	i151 = mod_const_p ((long long)bit_to_clr[35] - thread_start, 151);	// compute bit to clear for prime 151
-	i157 = mod_const_p ((long long)bit_to_clr[36] - thread_start, 157);	// compute bit to clear for prime 157
+	i131 = mod_const_p (bit_to_clr[31], thread_start, 131);	// compute bit to clear for prime 131
+	i137 = mod_const_p (bit_to_clr[32], thread_start, 137);	// compute bit to clear for prime 137
+	i139 = mod_const_p (bit_to_clr[33], thread_start, 139);	// compute bit to clear for prime 139
+	i149 = mod_const_p (bit_to_clr[34], thread_start, 149);	// compute bit to clear for prime 149
+	i151 = mod_const_p (bit_to_clr[35], thread_start, 151);	// compute bit to clear for prime 151
+	i157 = mod_const_p (bit_to_clr[36], thread_start, 157);	// compute bit to clear for prime 157
 
 	for (j = 0; ; ) {
 		mask1 = ((uint64) 1 << i131) | ((uint64) 1 << i137);
@@ -680,12 +706,12 @@ __global__ static void __launch_bounds__(256,6) SegSieve (uint8 *big_bit_array_d
 		i157 = bump_mod_p (i157, -128, 157);
 	}
 
-	i163 = mod_const_p ((long long)bit_to_clr[37] - thread_start, 163);	// compute bit to clear for prime 163
-	i167 = mod_const_p ((long long)bit_to_clr[38] - thread_start, 167);	// compute bit to clear for prime 167
-	i173 = mod_const_p ((long long)bit_to_clr[39] - thread_start, 173);	// compute bit to clear for prime 173
-	i179 = mod_const_p ((long long)bit_to_clr[40] - thread_start, 179);	// compute bit to clear for prime 179
-	i181 = mod_const_p ((long long)bit_to_clr[41] - thread_start, 181);	// compute bit to clear for prime 181
-	i191 = mod_const_p ((long long)bit_to_clr[42] - thread_start, 191);	// compute bit to clear for prime 191
+	i163 = mod_const_p (bit_to_clr[37], thread_start, 163);	// compute bit to clear for prime 163
+	i167 = mod_const_p (bit_to_clr[38], thread_start, 167);	// compute bit to clear for prime 167
+	i173 = mod_const_p (bit_to_clr[39], thread_start, 173);	// compute bit to clear for prime 173
+	i179 = mod_const_p (bit_to_clr[40], thread_start, 179);	// compute bit to clear for prime 179
+	i181 = mod_const_p (bit_to_clr[41], thread_start, 181);	// compute bit to clear for prime 181
+	i191 = mod_const_p (bit_to_clr[42], thread_start, 191);	// compute bit to clear for prime 191
 
 	for (j = 0; ; ) {
 		mask1 = ((uint64) 1 << i163) | ((uint64) 1 << i167);
@@ -709,12 +735,12 @@ __global__ static void __launch_bounds__(256,6) SegSieve (uint8 *big_bit_array_d
 		i191 = bump_mod_p (i191, -128, 191);
 	}
 
-	i193 = mod_const_p ((long long)bit_to_clr[43] - thread_start, 193);	// compute bit to clear for prime 193
-	i197 = mod_const_p ((long long)bit_to_clr[44] - thread_start, 197);	// compute bit to clear for prime 197
-	i199 = mod_const_p ((long long)bit_to_clr[45] - thread_start, 199);	// compute bit to clear for prime 199
-	i211 = mod_const_p ((long long)bit_to_clr[46] - thread_start, 211);	// compute bit to clear for prime 211
-	i223 = mod_const_p ((long long)bit_to_clr[47] - thread_start, 223);	// compute bit to clear for prime 223
-	i227 = mod_const_p ((long long)bit_to_clr[48] - thread_start, 227);	// compute bit to clear for prime 227
+	i193 = mod_const_p (bit_to_clr[43], thread_start, 193);	// compute bit to clear for prime 193
+	i197 = mod_const_p (bit_to_clr[44], thread_start, 197);	// compute bit to clear for prime 197
+	i199 = mod_const_p (bit_to_clr[45], thread_start, 199);	// compute bit to clear for prime 199
+	i211 = mod_const_p (bit_to_clr[46], thread_start, 211);	// compute bit to clear for prime 211
+	i223 = mod_const_p (bit_to_clr[47], thread_start, 223);	// compute bit to clear for prime 223
+	i227 = mod_const_p (bit_to_clr[48], thread_start, 227);	// compute bit to clear for prime 227
 
 	for (j = 0; ; ) {
 		mask1 = ((uint64) 1 << i193) | ((uint64) 1 << i197);
@@ -738,11 +764,11 @@ __global__ static void __launch_bounds__(256,6) SegSieve (uint8 *big_bit_array_d
 		i227 = bump_mod_p (i227, -128, 227);
 	}
 
-	i229 = mod_const_p ((long long)bit_to_clr[49] - thread_start, 229);	// compute bit to clear for prime 229
-	i233 = mod_const_p ((long long)bit_to_clr[50] - thread_start, 233);	// compute bit to clear for prime 233
-	i239 = mod_const_p ((long long)bit_to_clr[51] - thread_start, 239);	// compute bit to clear for prime 239
-	i241 = mod_const_p ((long long)bit_to_clr[52] - thread_start, 241);	// compute bit to clear for prime 241
-	i251 = mod_const_p ((long long)bit_to_clr[53] - thread_start, 251);	// compute bit to clear for prime 251
+	i229 = mod_const_p (bit_to_clr[49], thread_start, 229);	// compute bit to clear for prime 229
+	i233 = mod_const_p (bit_to_clr[50], thread_start, 233);	// compute bit to clear for prime 233
+	i239 = mod_const_p (bit_to_clr[51], thread_start, 239);	// compute bit to clear for prime 239
+	i241 = mod_const_p (bit_to_clr[52],  thread_start, 241);	// compute bit to clear for prime 241
+	i251 = mod_const_p (bit_to_clr[53], thread_start, 251);	// compute bit to clear for prime 251
 
 	for (j = 0; ; ) {
 		mask1 = (uint64) 1 << i229;
@@ -770,7 +796,7 @@ __global__ static void __launch_bounds__(256,6) SegSieve (uint8 *big_bit_array_d
 	// Each thread handles one 256-bit word of the 256-bit section of shared memory.
 	// Each prime will hit a 256-bit word zero or one time.
 
-#define SIEVE_256_BIT(n,p)	i = mod_const_p ((long long)bit_to_clr[n] - thread_start, p); \
+#define SIEVE_256_BIT(n,p)	i = mod_const_p (bit_to_clr[n], thread_start, p); \
 				if (i < 256) locsieve[j * threadsPerBlock * 32 + threadIdx.x * 32 + (i >> 3)] |= 1 << (i & 7);
 
 	if (primesNotSieved + primesHandledWithSpecialCode > 54)
@@ -848,7 +874,7 @@ __global__ static void __launch_bounds__(256,6) SegSieve (uint8 *big_bit_array_d
 			pinv = pinfo32[threadsPerBlock + j * threadsPerBlock / 8 + threadIdx.x / 8];
 			validate_bclr (bclr, p);
 
-			bclr = mod_p ((long long)bclr - block_start, p, pinv) + (threadIdx.x & 7) * p;
+			bclr = mod_p (bclr, block_start, p, pinv) + (threadIdx.x & 7) * p;
 			mask = 1 << (bclr & 7);
 			bclr = bclr >> 3;
 
@@ -888,9 +914,9 @@ __global__ static void __launch_bounds__(256,6) SegSieve (uint8 *big_bit_array_d
 		pinv2 = pinfo32[threadsPerBlock*3 + threadIdx.x];
 		pinv = pinfo32[threadsPerBlock*5 + threadIdx.x];
 
-		bclr3 = mod_p ((long long)bclr3 - block_start, p3, pinv3);
-		bclr2 = mod_p ((long long)bclr2 - block_start, p2, pinv2);
-		bclr = mod_p ((long long)bclr - block_start, p, pinv);
+		bclr3 = mod_p (bclr3, block_start, p3, pinv3);
+		bclr2 = mod_p (bclr2, block_start, p2, pinv2);
+		bclr = mod_p (bclr, block_start, p, pinv);
 
 		// Clear bits (assumes 64K bitmap)
 		do {
@@ -920,7 +946,7 @@ __global__ static void __launch_bounds__(256,6) SegSieve (uint8 *big_bit_array_d
 		p2 = pinfo32[threadsPerBlock * 2 + threadIdx.x];
 		validate_bclr (bclr2, p2);
 
-		bclr2 = mod_p (bclr2 - block_start, p2, pinv2);
+		bclr2 = mod_p (bclr2, block_start, p2, pinv2);
 
 		// Clear (rarely) 0, 1 or (rarely) 2 bits (bug: assumes block_size = 64K)
 		if (bclr2 < block_size) {
@@ -934,7 +960,7 @@ __global__ static void __launch_bounds__(256,6) SegSieve (uint8 *big_bit_array_d
 		p = pinfo32[threadsPerBlock * 5 + threadIdx.x];
 		validate_bclr (bclr, p);
 
-		bclr = mod_p ((long long)bclr - block_start, p, pinv);
+		bclr = mod_p (bclr, block_start, p, pinv);
 
 		// Clear (rarely) 0, 1 or (rarely) 2 bits (bug: assumes block_size = 64K)
 		if (bclr < block_size) bitOr (locsieve, bclr);
@@ -966,9 +992,9 @@ __global__ static void __launch_bounds__(256,6) SegSieve (uint8 *big_bit_array_d
 		validate_bclr (bclr2, p2);
 		validate_bclr (bclr, p);
 
-		bclr3 = mod_p ((long long)bclr3 - block_start, p3, pinv3);
-		bclr2 = mod_p ((long long)bclr2 - block_start, p2, pinv2);
-		bclr = mod_p ((long long)bclr - block_start, p, pinv);
+		bclr3 = mod_p (bclr3, block_start, p3, pinv3);
+		bclr2 = mod_p (bclr2, block_start, p2, pinv2);
+		bclr = mod_p (bclr, block_start, p, pinv);
 
 		// Optionally clear bit (bug: assumes block_size <= 64K)
 		if (bclr3 < block_size) bitOr (locsieve, bclr3);
@@ -985,7 +1011,7 @@ __global__ static void __launch_bounds__(256,6) SegSieve (uint8 *big_bit_array_d
 		p = pinfo32[threadsPerBlock * 2 + threadIdx.x];
 		validate_bclr (bclr, p);
 
-		bclr = sloppy_mod_p (bclr - block_start, p, pinv);
+		bclr = sloppy_mod_p (bclr, block_start, p, pinv);
 
 		// Optionally clear bit
 		if (bclr < block_size) bitOr (locsieve, bclr);
@@ -1023,10 +1049,10 @@ __global__ static void __launch_bounds__(256,6) SegSieve (uint8 *big_bit_array_d
 		validate_bclr (bclr2, p2);
 		validate_bclr (bclr, p);
 
-		bclr4 = sloppy_mod_p (bclr4 - block_start, p4, pinv4);
-		bclr3 = sloppy_mod_p (bclr3 - block_start, p3, pinv3);
-		bclr2 = sloppy_mod_p (bclr2 - block_start, p2, pinv2);
-		bclr = sloppy_mod_p (bclr - block_start, p, pinv);
+		bclr4 = sloppy_mod_p (bclr4, block_start, p4, pinv4);
+		bclr3 = sloppy_mod_p (bclr3, block_start, p3, pinv3);
+		bclr2 = sloppy_mod_p (bclr2, block_start, p2, pinv2);
+		bclr = sloppy_mod_p (bclr, block_start, p, pinv);
 
 		// Optionally clear bit
 		if (bclr4 < block_size) bitOr (locsieve, bclr4);
@@ -1044,7 +1070,7 @@ __global__ static void __launch_bounds__(256,6) SegSieve (uint8 *big_bit_array_d
 		p = pinfo32[threadsPerBlock * 2 + threadIdx.x];
 		validate_bclr (bclr, p);
 
-		bclr = sloppy_mod_p (bclr - block_start, p, pinv);
+		bclr = sloppy_mod_p (bclr, block_start, p, pinv);
 
 		// Optionally clear bit
 		if (bclr < block_size)
@@ -1082,10 +1108,10 @@ __global__ static void __launch_bounds__(256,6) SegSieve (uint8 *big_bit_array_d
 		validate_bclr (bclr2, p2);
 		validate_bclr (bclr, p);
 
-		bclr4 = sloppy_mod_p (bclr4 - block_start, p4, pinv4);
-		bclr3 = sloppy_mod_p (bclr3 - block_start, p3, pinv3);
-		bclr2 = sloppy_mod_p (bclr2 - block_start, p2, pinv2);
-		bclr = sloppy_mod_p (bclr - block_start, p, pinv);
+		bclr4 = sloppy_mod_p (bclr4, block_start, p4, pinv4);
+		bclr3 = sloppy_mod_p (bclr3, block_start, p3, pinv3);
+		bclr2 = sloppy_mod_p (bclr2, block_start, p2, pinv2);
+		bclr = sloppy_mod_p (bclr, block_start, p, pinv);
 
 		// Optionally clear bit
 		if (bclr4 < block_size) bitOr (locsieve, bclr4);
@@ -1646,7 +1672,7 @@ void gpusieve_init_class (mystuff_t *mystuff, unsigned long long k_min)
 
 	// Calculate the initial bit-to-clear for each prime
 	CalcBitToClear<<<primes_per_thread+1, threadsPerBlock>>>(mystuff->exponent, k_base, (int *)mystuff->d_calc_bit_to_clear_info, (uint8 *)mystuff->d_sieve_info);
-	cudaThreadSynchronize ();
+	// cudaThreadSynchronize ();
 }
 
 
@@ -1673,6 +1699,6 @@ void gpusieve (mystuff_t *mystuff, unsigned long long num_k_remaining)
 
 	// Do some sieving on the GPU!
 	SegSieve<<<block_count, threadsPerBlock>>>((uint8 *)mystuff->d_bitarray, (uint8 *)mystuff->d_sieve_info, primes_per_thread);
-	cudaThreadSynchronize ();
+	// cudaThreadSynchronize ();
 }
 

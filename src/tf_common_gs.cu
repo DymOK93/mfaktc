@@ -56,8 +56,9 @@ extern "C" __host__ int tf_class_barrett92_gs(unsigned long long int k_min, unsi
   timeval timer;
   int96 factor,k_base;
   int192 b_preinit;
-  int shiftcount, ln2b, count = 0;
-  int numblocks;
+  int shiftcount, ln2b;
+  unsigned int count = 0;
+  unsigned int numblocks;
   unsigned long long k_remaining;
   char string[50];
   int shared_mem_required;
@@ -138,11 +139,14 @@ extern "C" __host__ int tf_class_barrett92_gs(unsigned long long int k_min, unsi
     // a multiple of the bits processed by each TF kernel (my_stuff->gpu_sieve_processing_size).
 
     k_remaining = ((k_max - k_min + 1) + NUM_CLASSES - 1) / NUM_CLASSES;
-    if (k_remaining < (unsigned long long) mystuff->gpu_sieve_size) {
-      numblocks = ((int) k_remaining + mystuff->gpu_sieve_processing_size - 1) / mystuff->gpu_sieve_processing_size;
-      k_remaining = numblocks * mystuff->gpu_sieve_processing_size;
-    } else
-      numblocks = mystuff->gpu_sieve_size / mystuff->gpu_sieve_processing_size;
+    unsigned long long k_rem_old = k_remaining;
+
+    if (k_remaining < mystuff->gpu_sieve_size) {
+      numblocks = (unsigned int)((k_remaining + mystuff->gpu_sieve_processing_size - 1) / mystuff->gpu_sieve_processing_size);
+      k_remaining = (unsigned long long)numblocks * mystuff->gpu_sieve_processing_size;
+    }
+    else
+      numblocks = (unsigned int)(mystuff->gpu_sieve_size / mystuff->gpu_sieve_processing_size);
 
     // Do some sieving on the GPU.
 
@@ -165,14 +169,11 @@ extern "C" __host__ int tf_class_barrett92_gs(unsigned long long int k_min, unsi
 #endif
                                                                        );
 
-    // Sync before doing more GPU sieving
-    cudaThreadSynchronize();
-
     // Count the number of blocks processed
     count += numblocks;
 
     // Move to next batch of k's
-    k_min += (unsigned long long) mystuff->gpu_sieve_size * NUM_CLASSES;
+    k_min += mystuff->gpu_sieve_size * NUM_CLASSES;
     if (k_min > k_max) break;
 
     //BUG - we should call a different routine to advance the bit-to-clear values by gpusieve_size bits
@@ -180,6 +181,9 @@ extern "C" __host__ int tf_class_barrett92_gs(unsigned long long int k_min, unsi
     // HOWEVER, the self-test code will ot check this new code unless we make the gpusieve_size much smaller
     gpusieve_init_class (mystuff, k_min);
   }
+
+  // Sync before doing more GPU sieving
+  cudaThreadSynchronize();
 
 /* download results from GPU */
   cudaMemcpy(mystuff->h_RES, mystuff->d_RES, 32*sizeof(int), cudaMemcpyDeviceToHost);
