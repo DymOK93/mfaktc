@@ -122,7 +122,7 @@ extern "C" __host__ int tf_class_barrett92(unsigned long long int k_min, unsigne
 
 
 /* set result array to 0 */  
-  cudaMemsetAsync(mystuff->d_RES, 0, 1*sizeof(int)); //first int of result array contains the number of factors found
+  cudaMemset(mystuff->d_RES, 0, 1*sizeof(int)); //first int of result array contains the number of factors found
 //  for(i=0;i<32;i++)mystuff->h_RES[i]=0;
 //  cudaMemcpy(mystuff->d_RES, mystuff->h_RES, 32*sizeof(int), cudaMemcpyHostToDevice);
 
@@ -251,7 +251,7 @@ extern "C" __host__ int tf_class_barrett92(unsigned long long int k_min, unsigne
 #endif  
 
   mystuff->stats.grid_count = count;
-  mystuff->stats.class_time = timer_diff(&timer)/1000;
+  // mystuff->stats.class_time = timer_diff(&timer)/1000;
 /* prevent division by zero if timer resolution is too low */
   if(mystuff->stats.class_time == 0)mystuff->stats.class_time = 1;
 
