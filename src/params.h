@@ -11,7 +11,7 @@ mfaktc is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
-
+                                
 You should have received a copy of the GNU General Public License
 along with mfaktc.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -86,7 +86,7 @@ code path */
 *******************************************************************************
 ******************************************************************************/
 
-#define MFAKTC_VERSION "0.21" /* DO NOT CHANGE! */
+#define MFAKTC_VERSION "0.23.0" /* DO NOT CHANGE! */
 
 
 
@@ -174,12 +174,12 @@ The following lines define the min, default and max value.
 #define GPU_SIEVE_PRIMES_MAX           1075000 /* Primes to 16,729,793.  GPU sieve should be able to handle up to 16M. */
 
 #define GPU_SIEVE_SIZE_MIN                   4 /* A 4M bit sieve seems like a reasonable minimum */
-#define GPU_SIEVE_SIZE_DEFAULT              64 /* Default is a 16M bit sieve */
-#define GPU_SIEVE_SIZE_MAX                2047 /* 2047M (INT_MAX) is current sieve algorithm limit */
+#define GPU_SIEVE_SIZE_DEFAULT            2047 /* Default is a 128M bit sieve */
+#define GPU_SIEVE_SIZE_MAX                2047 /* We've only tested up to 128M bits.  The GPU sieve code may be able to go higher. */
 
 #define GPU_SIEVE_PROCESS_SIZE_MIN           8 /* Processing 8K bits in each block is minimum (256 threads * 1 word of 32 bits) */
 #define GPU_SIEVE_PROCESS_SIZE_DEFAULT      16 /* Default is processing 8K bits */
-#define GPU_SIEVE_PROCESS_SIZE_MAX          64 /* Upper limit is 64K, since we store k values as "short". */
+#define GPU_SIEVE_PROCESS_SIZE_MAX          32 /* Upper limit is 64K, since we store k values as "short". */
 
 
 
@@ -188,3 +188,6 @@ The following lines define the min, default and max value.
 #else /* Mersennes */
   #define NAME_NUMBERS "M"
 #endif
+
+/* For worktodo.txt files */
+#define MAX_LINE_LENGTH 100

@@ -1,2 +1,5 @@
 *.o
 mfaktc.exe
+oldbuild/
+build/
+stable/

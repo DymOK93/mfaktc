@@ -52,15 +52,16 @@ typedef struct
 
 typedef struct
 {
-  char progressheader[256];            /* userconfigureable progress header */
-  char progressformat[256];            /* userconfigureable progress line */
-  int class_number;                    /* the number of the last processed class */
-  int grid_count;                      /* number of grids processed in the last processed class */
-  unsigned long long int class_time;   /* time (in ms) needed to process the last processed class */
-  float cpu_wait;                      /* percentage CPU was waiting for the GPU */
-  int output_counter;                  /* count how often the status line was written since last headline */
-  int class_counter;                   /* number of finished classes of the current job */
-  double ghzdays;                      /* primenet GHZdays for the current assignment (current stage) */
+  char progressheader[256];              /* userconfigureable progress header */
+  char progressformat[256];              /* userconfigureable progress line */
+  int class_number;                      /* the number of the last processed class */
+  int grid_count;                        /* number of grids processed in the last processed class */
+  unsigned long long int class_time;     /* time (in ms) needed to process the last processed class */
+  unsigned long long int bit_level_time; /* time (in ms) since the bitlevel was started */
+  float cpu_wait;                        /* percentage CPU was waiting for the GPU */
+  int output_counter;                    /* count how often the status line was written since last headline */
+  int class_counter;                     /* number of finished classes of the current job */
+  double ghzdays;                        /* primenet GHZdays for the current assignment (current stage) */
   char kernelname[30];
 }stats_t;
 
@@ -86,6 +87,9 @@ typedef struct
   char workfile[51];                   /* allow filenames up to 50 chars... */
   char addfile[51];                    /* allow filenames up to 50 chars... */
   char resultfile[51];                 /* allow filenames up to 50 chars... */
+  char jsonresultfile[51];             /* allow filenames up to 50 chars... */
+  char logfile[51];                    /* allow filenames up to 50 chars... */
+  FILE* logfileptr;
   int num_streams, cpu_streams;
   
   int compcapa_major;                  /* compute capability major */
@@ -120,6 +124,7 @@ typedef struct
   
   int quit;
   int verbosity;                       /* 0 = reduced number of screen printfs, 1 = default, >= 2 = some additional printfs */
+  int logging;                       /* 0 = logging disabled (default), 1 = logging enabled */
   
   int selftestsize;
   int selftestrandomoffset;
@@ -128,6 +133,8 @@ typedef struct
   
   char V5UserID[51];                   /* primenet V5UserID and ComputerID */
   char ComputerID[51];                 /* currently only used for screen/result output */
+  char assignment_key[MAX_LINE_LENGTH + 1]; /* the assignment ID */
+  char factors_string[500];            /* store factors in global state */
   
 }mystuff_t;                            /* FIXME: propper name needed */
 
