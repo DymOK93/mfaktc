@@ -39,11 +39,10 @@ along with mfaktc.  If not, see <http://www.gnu.org/licenses/>.
 
 extern __global__ void
 #ifdef SHORTCUT_75BIT
-mfaktc_75(unsigned int exp, int96 k, unsigned int *k_tab, int shiftcount, int192 b, unsigned int *RES
+mfaktc_75(unsigned int exp, int96 k, unsigned int *k_tab, int shiftcount, int192 b, unsigned int *RES);
 #else
-mfaktc_95(unsigned int exp, int96 k, unsigned int *k_tab, int shiftcount, int192 b, unsigned int *RES
+mfaktc_95(unsigned int exp, int96 k, unsigned int *k_tab, int shiftcount, int192 b, unsigned int *RES);
 #endif
-#ifdef DEBUG_GPU_MATH
 
 extern __global__ void
 #ifdef SHORTCUT_75BIT
