@@ -44,7 +44,7 @@ LDFLAGS = -fPIC $(CUDA_LIB) -lcudart_static -lm -lstdc++ -flto
 
 CSRC  = sieve.c timer.c parse.c read_config.c mfaktc.c checkpoint.c \
 	signal_handler.c output.c
-CUSRC = tf_72bit.cu tf_96bit.cu tf_96bit_common.o tf_barrett96.cu tf_barrett96_gs.cu gpusieve.cu
+CUSRC = tf_72bit.cu tf_96bit.cu tf_96bit_common.cu tf_barrett96.cu tf_barrett96_gs.cu gpusieve.cu
 
 COBJS  = $(CSRC:.c=.o)
 CUOBJS = $(CUSRC:.cu=.o) tf_75bit.o tf_75bit_common.o
