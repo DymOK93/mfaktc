@@ -37,6 +37,11 @@ along with mfaktc.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "gpusieve_helper.cu"
 
+extern void mfaktc_75_gs(unsigned int exp, int96 k_base, unsigned int *bit_array, unsigned int bits_to_process, int shiftcount, int192 b, unsigned int *RES);
+#else
+extern void mfaktc_95_gs(unsigned int exp, int96 k_base, unsigned int *bit_array, unsigned int bits_to_process, int shiftcount, int192 b, unsigned int *RES);
+#endif
+
 #define TF_96BIT
 #include "tf_common.cu"
 #include "tf_common_gs.cu"
