@@ -37,10 +37,19 @@ along with mfaktc.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "gpusieve_helper.cu"
 
+extern __global__ void
 #ifdef SHORTCUT_75BIT
-extern __global__ void mfaktc_75_gs(unsigned int exp, int96 k_base, unsigned int *bit_array, unsigned int bits_to_process, int shiftcount, int192 b, unsigned int *RES);
+mfaktc_75(unsigned int exp, int96 k, unsigned int *k_tab, int shiftcount, int192 b, unsigned int *RES
 #else
-extern __global__ void mfaktc_95_gs(unsigned int exp, int96 k_base, unsigned int *bit_array, unsigned int bits_to_process, int shiftcount, int192 b, unsigned int *RES);
+mfaktc_95(unsigned int exp, int96 k, unsigned int *k_tab, int shiftcount, int192 b, unsigned int *RES
+#endif
+#ifdef DEBUG_GPU_MATH
+
+extern __global__ void
+#ifdef SHORTCUT_75BIT
+mfaktc_75_gs(unsigned int exp, int96 k_base, unsigned int *bit_array, unsigned int bits_to_process, int shiftcount, int192 b, unsigned int *RES);
+#else
+mfaktc_95_gs(unsigned int exp, int96 k_base, unsigned int *bit_array, unsigned int bits_to_process, int shiftcount, int192 b, unsigned int *RES);
 #endif
 
 #define TF_96BIT
