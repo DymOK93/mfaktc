@@ -44,10 +44,10 @@ LDFLAGS = -fPIC $(CUDA_LIB) -lcudart_static -lm -lstdc++ -flto
 
 CSRC  = sieve.c timer.c parse.c read_config.c mfaktc.c checkpoint.c \
 	signal_handler.c output.c
-CUSRC = tf_72bit.cu tf_96bit.cu tf_barrett96.cu tf_barrett96_gs.cu gpusieve.cu
+CUSRC = tf_72bit.cu tf_96bit.cu tf_96bit_common.o tf_barrett96.cu tf_barrett96_gs.cu gpusieve.cu
 
 COBJS  = $(CSRC:.c=.o)
-CUOBJS = $(CUSRC:.cu=.o) tf_75bit.o
+CUOBJS = $(CUSRC:.cu=.o) tf_75bit.o tf_75bit_common.o
 
 ##############################################################################
 
@@ -64,6 +64,9 @@ sieve.o : sieve.c
 	
 tf_75bit.o : tf_96bit.cu
 	$(NVCC) $(NVCCFLAGS) $(NVCCPTX) -c $< -o $@ -DSHORTCUT_75BIT
+
+tf_75bit_common.o : tf_96bit_common.cu
+	$(NVCC) $(NVCCFLAGS) $(NVCCPTX) -c $< -o $@ -DSHORTCUT_75BIT
 	
 #%.o : %.cu
 #	$(NVCC) $(NVCCFLAGS) $(NVCCARCH) -c $< -o $@
@@ -71,6 +74,9 @@ tf_72bit.o : tf_72bit.cu
 	$(NVCC) $(NVCCFLAGS) $(NVCCBIN) -c $< -o $@
 
 tf_96bit.o : tf_96bit.cu
+	$(NVCC) $(NVCCFLAGS) $(NVCCPTX) -c $< -o $@
+
+tf_96bit_common.o : tf_96bit_common.cu
 	$(NVCC) $(NVCCFLAGS) $(NVCCPTX) -c $< -o $@
 	   
 tf_barrett96.o : tf_barrett96.cu
@@ -120,7 +126,7 @@ timer.o: timer.c timer.h compatibility.h
 tf_72bit.o: tf_72bit.cu params.h my_types.h compatibility.h \
  my_intrinsics.h sieve.h timer.h output.h tf_debug.h tf_common.cu
 
-tf_96bit.o: tf_96bit.cu params.h my_types.h compatibility.h \
+tf_96bit.o: tf_96bit.cu tf_96bit_common.cu params.h my_types.h compatibility.h \
  my_intrinsics.h sieve.h timer.h output.h tf_debug.h \
  tf_96bit_base_math.cu tf_96bit_helper.cu gpusieve_helper.cu tf_common.cu \
  tf_common_gs.cu gpusieve.h
@@ -140,7 +146,7 @@ gpusieve.o: gpusieve.cu params.h my_types.h compatibility.h \
 
 # manually generated dependency
 
-tf_75bit.o: tf_96bit.cu params.h my_types.h compatibility.h \
+tf_75bit.o: tf_96bit.cu tf_96bit_common.cu params.h my_types.h compatibility.h \
  my_intrinsics.h sieve.h timer.h output.h tf_debug.h \
  tf_96bit_base_math.cu tf_96bit_helper.cu gpusieve_helper.cu tf_common.cu \
  tf_common_gs.cu gpusieve.h

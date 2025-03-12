@@ -374,7 +374,3 @@ a is precomputed on host ONCE. */
   }
 }
 
-#define TF_96BIT
-#include "tf_common.cu"
-#include "tf_common_gs.cu"
-#undef TF_96BIT
