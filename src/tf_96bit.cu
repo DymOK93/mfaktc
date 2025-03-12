@@ -16,27 +16,7 @@ You should have received a copy of the GNU General Public License
 along with mfaktc.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdio.h>
-#include <cuda.h>
-#include <cuda_runtime.h>  
-
-#include "params.h"
-#include "my_types.h"
-#include "compatibility.h"
-#include "my_intrinsics.h"
-
-#define NVCC_EXTERN
-#include "sieve.h"
-#include "timer.h"
-#include "output.h"
-#undef NVCC_EXTERN
-
-#include "tf_debug.h"
-#include "tf_96bit_base_math.cu"
-#include "tf_96bit_helper.cu"
-
-#include "gpusieve_helper.cu"
-
+#include "tf_96bit_global.h"
 
 #ifndef DEBUG_GPU_MATH
 __device__ static void mod_192_96(int96 *res, int192 q, int96 n, float nf)
