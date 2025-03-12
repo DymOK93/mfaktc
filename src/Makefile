@@ -10,7 +10,7 @@ CFLAGS_EXTRA_SIEVE = -funroll-all-loops
 
 # Compiler settings for .cu files (CPU/GPU)
 NVCC = nvcc
-NVCCFLAGS = $(CUDA_INCLUDE) --ptxas-options=-v -arch=native
+NVCCFLAGS = $(CUDA_INCLUDE) --ptxas-options=-v
 
 # generate code for various compute capabilities
 # NVCCFLAGS += --generate-code arch=compute_11,code=sm_11 # CC 1.1, 1.2 and 1.3 GPUs will use this code (1.0 is not possible for mfaktc)
@@ -27,11 +27,11 @@ NVCCFLAGS = $(CUDA_INCLUDE) --ptxas-options=-v -arch=native
 # NVCCFLAGS += --generate-code arch=compute_80,code=sm_80
 # NVCCFLAGS += --generate-code arch=compute_86,code=sm_86
 # NVCCFLAGS += --generate-code arch=compute_87,code=sm_87
-# NVCCFLAGS += --generate-code arch=compute_89,code=sm_89
+NVCCPTX = --generate-code arch=compute_89,code=\"compute_89,sm_89\"
 # NVCCFLAGS += --generate-code arch=compute_90,code=sm_90
 # NVCCFLAGS += --generate-code arch=compute_100,code=sm_100
 # NVCCFLAGS += --generate-code arch=compute_101,code=sm_101
-# NVCCFLAGS += --generate-code arch=compute_120,code=sm_120
+NVCCBIN = --generate-code arch=compute_120,code=sm_120
 
 # pass some options to the C host compiler (e.g. gcc on Linux)
 NVCCFLAGS += --compiler-options=-Wall
@@ -63,10 +63,33 @@ sieve.o : sieve.c
 	$(CC) $(CFLAGS) $(CFLAGS_EXTRA_SIEVE) -c $< -o $@
 	
 tf_75bit.o : tf_96bit.cu
-	$(NVCC) $(NVCCFLAGS) -c $< -o $@ -DSHORTCUT_75BIT
+	$(NVCC) $(NVCCFLAGS) $(NVCCPTX) -c $< -o $@ -DSHORTCUT_75BIT
 	
-%.o : %.cu
-	$(NVCC) $(NVCCFLAGS) -c $< -o $@
+#%.o : %.cu
+#	$(NVCC) $(NVCCFLAGS) $(NVCCARCH) -c $< -o $@
+tf_72bit.o : tf_72bit.cu
+	$(NVCC) $(NVCCFLAGS) $(NVCCBIN) -c $< -o $@
+
+tf_96bit.o : tf_96bit.cu
+	$(NVCC) $(NVCCFLAGS) $(NVCCPTX) -c $< -o $@
+	   
+tf_barrett96.o : tf_barrett96.cu
+	$(NVCC) $(NVCCFLAGS) $(NVCCBIN) -c $< -o $@
+
+tf_barrett96_core.o : tf_barrett96_core.cu
+	$(NVCC) $(NVCCFLAGS) $(NVCCBIN) -c $< -o $@
+	   
+tf_barrett96_gs.o : tf_barrett96_gs.cu
+	$(NVCC) $(NVCCFLAGS) $(NVCCPTX) -c $< -o $@
+	   
+tf_common.o : tf_common.cu
+	$(NVCC) $(NVCCFLAGS) $(NVCCBIN) -c $< -o $@
+	   
+tf_common_gs.o : tf_common_gs.cu
+	$(NVCC) $(NVCCFLAGS) $(NVCCBIN) -c $< -o $@
+	
+gpusieve.o : gpusieve.cu
+	$(NVCC) $(NVCCFLAGS) $(NVCCBIN) -c $< -o $@
 
 %.o : %.c
 	$(CC) $(CFLAGS) -c $< -o $@
