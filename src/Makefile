@@ -81,18 +81,9 @@ tf_96bit_common.o : tf_96bit_common.cu
 	   
 tf_barrett96.o : tf_barrett96.cu
 	$(NVCC) $(NVCCFLAGS) $(NVCCBIN) -c $< -o $@
-
-tf_barrett96_core.o : tf_barrett96_core.cu
-	$(NVCC) $(NVCCFLAGS) $(NVCCBIN) -c $< -o $@
 	   
 tf_barrett96_gs.o : tf_barrett96_gs.cu
 	$(NVCC) $(NVCCFLAGS) $(NVCCPTX) -c $< -o $@
-	   
-tf_common.o : tf_common.cu
-	$(NVCC) $(NVCCFLAGS) $(NVCCBIN) -c $< -o $@
-	   
-tf_common_gs.o : tf_common_gs.cu
-	$(NVCC) $(NVCCFLAGS) $(NVCCBIN) -c $< -o $@
 	
 gpusieve.o : gpusieve.cu
 	$(NVCC) $(NVCCFLAGS) $(NVCCBIN) -c $< -o $@
