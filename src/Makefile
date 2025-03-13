@@ -31,7 +31,7 @@ NVCCFLAGS = $(CUDA_INCLUDE) --ptxas-options=-v -arch=native
 # NVCCFLAGS += --generate-code arch=compute_90,code=sm_90
 # NVCCFLAGS += --generate-code arch=compute_100,code=sm_100
 # NVCCFLAGS += --generate-code arch=compute_101,code=sm_101
-# NVCCFLAGS += --generate-code arch=compute_120,code=sm_120
+NVCCFLAGS += --generate-code arch=compute_120,code=sm_120
 
 # pass some options to the C host compiler (e.g. gcc on Linux)
 NVCCFLAGS += --compiler-options=-Wall
